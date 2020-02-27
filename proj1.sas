@@ -157,10 +157,10 @@ model SalePrice = MSSubClass	MSZoning	LotFrontage	LotArea	Street	Alley	LotShape	
 run;
 
 
-/*best code so far: 3096 */
+/*best code so far: 3056 */
 proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
 class Neighborhood OverallQual ExterQual KitchenQual BsmtQual SaleCondition GarageQual;
-model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | OverallQual GrLivArea | OverallQual BsmtQual GarageCars | GarageQual  SaleCondition | OverallQual YearBuilt
+model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | OverallQual GrLivArea | OverallQual BsmtQual GarageCars | GarageQual  SaleCondition | OverallQual YearBuilt YearRemodAdd
 /selection = stepwise (select=PRESS stop=PRESS) cvmethod=random(5) stats=adjrsq;
 output out = results p = predict;
 run;
@@ -170,10 +170,11 @@ run;
 
 proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
 class Neighborhood OverallQual ExterQual KitchenQual BsmtQual SaleCondition GarageQual;
-model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | OverallQual GrLivArea | OverallQual BsmtQual GarageCars | GarageQual  SaleCondition | GrLivArea |Neighborhood YearBuilt
+model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | OverallQual GrLivArea | OverallQual BsmtQual GarageCars | GarageQual  SaleCondition | OverallQual YearBuilt YearRemodAdd | KitchenQual 
 /selection = stepwise (select=PRESS stop=PRESS) cvmethod=random(5) stats=adjrsq;
 output out = results p = predict;
 run;
+
 
 proc means data=results;
 var SalePrice;
