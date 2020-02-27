@@ -1,0 +1,650 @@
+---
+title: "stats_proj"
+author: "Jules Stacy"
+date: "February 23, 2020"
+output: html_document
+---
+
+```{r}
+#code snippets
+#mass NA handler
+#d[is.na(d)] <- 0
+#a$x[a$x==NA]<-0;
+```
+
+```{r}
+invisible(library(tidyverse))
+invisible(library(caret))
+invisible(library(MASS))
+invisible(library(ggplot2))
+invisible(library(GGally))
+```
+
+```{r}
+
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#test = read.csv("./Data/test.csv")
+
+#train = read.csv("./Data/train.csv")
+```
+
+```{r}
+#NA value handling
+
+train$LotFrontage[is.na(train$LotFrontage)]<-0
+
+train$Alley <- as.character(train$Alley)
+train$Alley[is.na(train$Alley)]<-"NAl"
+train$Alley <- as.factor(train$Alley)
+
+train$MasVnrType <- as.character(train$MasVnrType)
+train$MasVnrType[is.na(train$MasVnrType)]<-"None"
+train$MasVnrType <- as.factor(train$MasVnrType)
+
+train$MasVnrArea[is.na(train$MasVnrArea)]<-0
+
+train$BsmtQual <- as.character(train$BsmtQual)
+train$BsmtQual[is.na(train$BsmtQual)]<-"NB"
+train$BsmtQual <- as.factor(train$BsmtQual)
+
+train$BsmtCond <- as.character(train$BsmtCond)
+train$BsmtCond[is.na(train$BsmtCond)]<-"NB"
+train$BsmtCond <- as.factor(train$BsmtCond)
+
+train$BsmtExposure <- as.character(train$BsmtCond)
+train$BsmtCond[is.na(train$BsmtCond)]<-"NB"
+train$BsmtCond <- as.factor(train$BsmtCond)
+
+train$BsmtFinType1 <- as.character(train$BsmtFinType1)
+train$BsmtFinType1[is.na(train$BsmtFinType1)]<-"NB"
+train$BsmtFinType1 <- as.factor(train$BsmtFinType1)
+
+train$BsmtFinType2 <- as.character(train$BsmtFinType2)
+train$BsmtFinType2[is.na(train$BsmtFinType2)]<-"NB"
+train$BsmtFinType2 <- as.factor(train$BsmtFinType2)
+
+train$Electrical <- as.character(train$Electrical)
+train$Electrical[is.na(train$Electrical)]<-"NE"
+train$Electrical <- as.factor(train$Electrical)
+
+train$FireplaceQu <- as.character(train$FireplaceQu)
+train$FireplaceQu[is.na(train$FireplaceQu)]<-"NF"
+train$FireplaceQu <- as.factor(train$FireplaceQu)
+
+train$GarageType <- as.character(train$GarageType)
+train$GarageType[is.na(train$GarageType)]<-"NG"
+train$GarageType <- as.factor(train$GarageType)
+
+train$GarageYrBlt[is.na(train$GarageYrBlt)]<-0
+
+train$GarageFinish <- as.character(train$GarageFinish)
+train$GarageFinish[is.na(train$GarageFinish)]<-"NG"
+train$GarageFinish <- as.factor(train$GarageFinish)
+
+train$GarageQual <- as.character(train$GarageQual)
+train$GarageQual[is.na(train$GarageQual)]<-"NG"
+train$GarageQual <- as.factor(train$GarageQual)
+
+train$GarageCond <- as.character(train$GarageCond)
+train$GarageCond[is.na(train$GarageCond)]<-"NG"
+train$GarageCond <- as.factor(train$GarageCond)
+
+train$PoolQC <- as.character(train$PoolQC)
+train$PoolQC[is.na(train$PoolQC)]<-"NP"
+train$PoolQC <- as.factor(train$PoolQC)
+
+train$Fence <- as.character(train$Fence)
+train$Fence[is.na(train$Fence)]<-"NF"
+train$Fence <- as.factor(train$Fence)
+
+train$MiscFeature <- as.character(train$MiscFeature)
+train$MiscFeature[is.na(train$MiscFeature)]<-"NM"
+train$MiscFeature <- as.factor(train$MiscFeature)
+
+write.csv(train, "./Data/train_clean.csv")
+
+
+#debug~~
+sum(is.na(train))
+levels(train$MasVnrArea)
+names(train)
+```
+
+```{r}
+#Create a list of NA value sums for each column
+list.na <- c()
+for(i in 1:length(names(train))){
+list.na <- c(list.na, sum(is.na(train[i])))
+  }
+
+
+#debug ~~
+list.na
+train
+
+```
+
+
+```{r}
+#Create a list of NA value sums for each column
+list.na <- c()
+vars.na <- c()
+for(i in 1:length(names(test))){
+  list.na <- c(list.na, sum(is.na(test[i])))
+  if(sum(is.na(test[i]))){
+    vars.na <- c(vars.na, names(test[i]))
+  }
+}
+
+
+#debug ~~
+list.na
+vars.na
+
+```
+
+
+```{r}
+#NA value handling
+
+test$MSZoning <- as.character(test$MSZoning)
+test$MSZoning[is.na(test$MSZoning)]<-"NZ"
+test$MSZoning <- as.factor(test$MSZoning)
+
+
+test$LotFrontage[is.na(test$LotFrontage)]<-0
+
+test$Alley <- as.character(test$Alley)
+test$Alley[is.na(test$Alley)]<-"NAl"
+test$Alley <- as.factor(test$Alley)
+
+test$Utilities <- as.character(test$Utilities)
+test$Utilities[is.na(test$Utilities)]<-"NU"
+test$Utilities <- as.factor(test$Utilities)
+
+test$Exterior1st <- as.character(test$Exterior1st)
+test$Exterior1st[is.na(test$Exterior1st)]<-"Other"
+test$Exterior1st <- as.factor(test$Exterior1st)
+
+test$Exterior2nd <- as.character(test$Exterior2nd)
+test$Exterior2nd[is.na(test$Exterior2nd)]<-"Other"
+test$Exterior2nd <- as.factor(test$Exterior2nd)
+
+
+test$MasVnrType <- as.character(test$MasVnrType)
+test$MasVnrType[is.na(test$MasVnrType)]<-"None"
+test$MasVnrType <- as.factor(test$MasVnrType)
+
+test$MasVnrArea[is.na(test$MasVnrArea)]<-0
+
+
+test$BsmtQual <- as.character(test$BsmtQual)
+test$BsmtQual[is.na(test$BsmtQual)]<-"NB"
+test$BsmtQual <- as.factor(test$BsmtQual)
+
+test$BsmtCond <- as.character(test$BsmtCond)
+test$BsmtCond[is.na(test$BsmtCond)]<-"NB"
+test$BsmtCond <- as.factor(test$BsmtCond)
+
+test$BsmtExposure <- as.character(test$BsmtCond)
+test$BsmtCond[is.na(test$BsmtCond)]<-"NB"
+test$BsmtCond <- as.factor(test$BsmtCond)
+
+test$BsmtFinType1 <- as.character(test$BsmtFinType1)
+test$BsmtFinType1[is.na(test$BsmtFinType1)]<-"NB"
+test$BsmtFinType1 <- as.factor(test$BsmtFinType1)
+
+test$BsmtFinSF1[is.na(test$BsmtFinSF1)]<-0
+
+test$BsmtFinType2 <- as.character(test$BsmtFinType2)
+test$BsmtFinType2[is.na(test$BsmtFinType2)]<-"NB"
+test$BsmtFinType2 <- as.factor(test$BsmtFinType2)
+
+test$BsmtFinSF2[is.na(test$BsmtFinSF2)]<-0
+
+test$BsmtUnfSF[is.na(test$BsmtUnfSF)]<-0
+
+test$TotalBsmtSF[is.na(test$TotalBsmtSF)]<-0
+
+test$BsmtFullBath[is.na(test$BsmtFullBath)]<-0
+test$BsmtHalfBath[is.na(test$BsmtHalfBath)]<-0
+
+test$KitchenQual <- as.character(test$KitchenQual)
+test$KitchenQual[is.na(test$KitchenQual)]<-"NK"
+test$KitchenQual <- as.factor(test$KitchenQual)
+
+test$Functional <- as.character(test$Functional)
+test$Functional[is.na(test$Functional)]<-"NH"
+test$Functional <- as.factor(test$Functional)
+
+
+test$Electrical <- as.character(test$Electrical)
+test$Electrical[is.na(test$Electrical)]<-"NE"
+test$Electrical <- as.factor(test$Electrical)
+
+test$FireplaceQu <- as.character(test$FireplaceQu)
+test$FireplaceQu[is.na(test$FireplaceQu)]<-"NF"
+test$FireplaceQu <- as.factor(test$FireplaceQu)
+
+test$GarageType <- as.character(test$GarageType)
+test$GarageType[is.na(test$GarageType)]<-"NG"
+test$GarageType <- as.factor(test$GarageType)
+
+test$GarageYrBlt[is.na(test$GarageYrBlt)]<-0
+
+test$GarageFinish <- as.character(test$GarageFinish)
+test$GarageFinish[is.na(test$GarageFinish)]<-"NG"
+test$GarageFinish <- as.factor(test$GarageFinish)
+
+test$GarageCars <- as.character(test$GarageCars)
+test$GarageCars[is.na(test$GarageCars)]<-0
+test$GarageCars <- as.factor(test$GarageCars)
+
+test$GarageArea[is.na(test$GarageArea)]<-0
+
+
+test$GarageQual <- as.character(test$GarageQual)
+test$GarageQual[is.na(test$GarageQual)]<-"NG"
+test$GarageQual <- as.factor(test$GarageQual)
+
+test$GarageCond <- as.character(test$GarageCond)
+test$GarageCond[is.na(test$GarageCond)]<-"NG"
+test$GarageCond <- as.factor(test$GarageCond)
+
+test$PoolQC <- as.character(test$PoolQC)
+test$PoolQC[is.na(test$PoolQC)]<-"NP"
+test$PoolQC <- as.factor(test$PoolQC)
+
+test$Fence <- as.character(test$Fence)
+test$Fence[is.na(test$Fence)]<-"NF"
+test$Fence <- as.factor(test$Fence)
+
+test$MiscFeature <- as.character(test$MiscFeature)
+test$MiscFeature[is.na(test$MiscFeature)]<-"NM"
+test$MiscFeature <- as.factor(test$MiscFeature)
+
+test$SaleType <- as.character(test$SaleType)
+test$SaleType[is.na(test$SaleType)]<-"Other"
+test$SaleType <- as.factor(test$SaleType)
+
+write.csv(test, "./Data/test_clean.csv")
+
+
+#debug~~
+sum(is.na(test))
+```
+
+
+
+
+
+
+```{r}
+#turn categorical variables into factors
+train$MSSubClass <- factor(train$MSSubClass)
+train$MSZoning <- factor(train$MSZoning)
+train$Street <- factor(train$Street)
+train$Alley <- factor(train$Alley)
+train$LotShape <- factor(train$LotShape)
+train$LandContour <- factor(train$LandContour)
+train$Utilities <- factor(train$Utilities)
+train$LotConfig <- factor(train$LotConfig)
+train$LandSlope <- factor(train$LandSlope)
+train$Neighborhood <- factor(train$Neighborhood)
+train$Condition1 <- factor(train$Condition1)
+train$Condition2 <- factor(train$Condition2)
+train$BldgType <- factor(train$BldgType)
+train$HouseStyle <- factor(train$HouseStyle)
+train$OverallQual <- factor(train$OverallQual)
+train$OverallCond <- factor(train$OverallCond)
+train$RoofStyle <- factor(train$RoofStyle)
+train$RoofMatl <- factor(train$RoofMatl)
+train$Exterior1st <- factor(train$Exterior1st)
+train$Exterior2nd <- factor(train$Exterior2nd)
+train$MasVnrType <- factor(train$MasVnrType)
+train$ExterQual <- factor(train$ExterQual)
+train$ExterCond <- factor(train$ExterCond)
+train$Foundation <- factor(train$Foundation)
+train$BsmtQual <- factor(train$BsmtQual)
+train$BsmtCond <- factor(train$BsmtCond)
+train$BsmtExposure <- factor(train$BsmtExposure)
+train$BsmtFinType1 <- factor(train$BsmtFinType1)
+train$BsmtFinType2 <- factor(train$BsmtFinType2)
+train$Heating <- factor(train$Heating)
+train$HeatingQC <- factor(train$HeatingQC)
+train$CentralAir <- factor(train$CentralAir)
+train$Electrical <- factor(train$Electrical)
+train$KitchenQual <- factor(train$KitchenQual)
+train$Functional <- factor(train$Functional)
+train$FireplaceQu <- factor(train$FireplaceQu)
+train$GarageType <- factor(train$GarageType)
+train$GarageFinish <- factor(train$GarageFinish)
+train$GarageQual <- factor(train$GarageQual)
+train$GarageCond <- factor(train$GarageCond)
+train$PavedDrive <- factor(train$PavedDrive)
+train$PoolQC <- factor(train$PoolQC)
+train$Fence <- factor(train$Fence)
+train$MiscFeature <- factor(train$MiscFeature)
+train$SaleType <- factor(train$SaleType)
+train$SaleCondition <- factor(train$SaleCondition)
+
+#drop unused levels
+train$MSSubClass <- droplevels(train$MSSubClass)
+train$MSZoning <- droplevels(train$MSZoning)
+train$Street <- droplevels(train$Street)
+train$Alley <- droplevels(train$Alley)
+train$LotShape <- droplevels(train$LotShape)
+train$LandContour <- droplevels(train$LandContour)
+train$Utilities <- droplevels(train$Utilities)
+train$LotConfig <- droplevels(train$LotConfig)
+train$LandSlope <- droplevels(train$LandSlope)
+train$Neighborhood <- droplevels(train$Neighborhood)
+train$Condition1 <- droplevels(train$Condition1)
+train$Condition2 <- droplevels(train$Condition2)
+train$BldgType <- droplevels(train$BldgType)
+train$HouseStyle <- droplevels(train$HouseStyle)
+train$OverallQual <- droplevels(train$OverallQual)
+train$OverallCond <- droplevels(train$OverallCond)
+train$RoofStyle <- droplevels(train$RoofStyle)
+train$RoofMatl <- droplevels(train$RoofMatl)
+train$Exterior1st <- droplevels(train$Exterior1st)
+train$Exterior2nd <- droplevels(train$Exterior2nd)
+train$MasVnrType <- droplevels(train$MasVnrType)
+train$ExterQual <- droplevels(train$ExterQual)
+train$ExterCond <- droplevels(train$ExterCond)
+train$Foundation <- droplevels(train$Foundation)
+train$BsmtQual <- droplevels(train$BsmtQual)
+train$BsmtCond <- droplevels(train$BsmtCond)
+train$BsmtExposure <- droplevels(train$BsmtExposure)
+train$BsmtFinType1 <- droplevels(train$BsmtFinType1)
+train$BsmtFinType2 <- droplevels(train$BsmtFinType2)
+train$Heating <- droplevels(train$Heating)
+train$HeatingQC <- droplevels(train$HeatingQC)
+train$CentralAir <- droplevels(train$CentralAir)
+train$Electrical <- droplevels(train$Electrical)
+train$KitchenQual <- droplevels(train$KitchenQual)
+train$Functional <- droplevels(train$Functional)
+train$FireplaceQu <- droplevels(train$FireplaceQu)
+train$GarageType <- droplevels(train$GarageType)
+train$GarageFinish <- droplevels(train$GarageFinish)
+train$GarageQual <- droplevels(train$GarageQual)
+train$GarageCond <- droplevels(train$GarageCond)
+train$PavedDrive <- droplevels(train$PavedDrive)
+train$PoolQC <- droplevels(train$PoolQC)
+train$Fence <- droplevels(train$Fence)
+train$MiscFeature <- droplevels(train$MiscFeature)
+train$SaleType <- droplevels(train$SaleType)
+train$SaleCondition <- droplevels(train$SaleCondition)
+
+levels(train$MSSubClass)
+levels(train$MSZoning)
+levels(train$Street)
+levels(train$Alley)
+levels(train$LotShape)
+levels(train$LandContour)
+levels(train$Utilities)
+levels(train$LotConfig)
+levels(train$LandSlope)
+levels(train$Neighborhood)
+levels(train$Condition1)
+levels(train$Condition2)
+levels(train$BldgType)
+levels(train$HouseStyle)
+levels(train$OverallQual)
+levels(train$OverallCond)
+levels(train$RoofStyle)
+levels(train$RoofMatl)
+levels(train$Exterior1st)
+levels(train$Exterior2nd)
+levels(train$MasVnrType)
+levels(train$ExterQual)
+levels(train$ExterCond)
+levels(train$Foundation)
+levels(train$BsmtQual)
+levels(train$BsmtCond)
+levels(train$BsmtExposure)
+levels(train$BsmtFinType1)
+levels(train$BsmtFinType2)
+levels(train$Heating)
+levels(train$HeatingQC)
+levels(train$CentralAir)
+levels(train$Electrical)
+levels(train$KitchenQual)
+levels(train$Functional)
+levels(train$FireplaceQu)
+levels(train$GarageType)
+levels(train$GarageFinish)
+levels(train$GarageQual)
+levels(train$GarageCond)
+levels(train$PavedDrive)
+levels(train$PoolQC)
+levels(train$Fence)
+levels(train$MiscFeature)
+levels(train$SaleType)
+levels(train$SaleCondition)
+
+#debug ~~
+train
+```
+
+
+```{r}
+test.clean = read.csv("./Data/test_clean.csv")
+
+train.clean = read.csv("./Data/train_clean.csv")
+
+sum(is.na(test.clean))
+sum(is.na(train.clean))
+```
+
+
+
+
+```{r}
+#This block of code cycles through the df and builds a list of
+#individual r square values for each variable. It also adds
+#variables that pass the threshold to a list.
+
+#initialize vectors
+rsq.list <- c()
+arsq.list <- c()
+var.list<- c()
+
+#set the threshold for variable inclusion
+threshold <- 0.3
+
+#cycle through variables
+for(i in 1:(length(names(train))-1)){
+  
+  #build a temporary model
+  model_i <- lm(SalePrice ~ train[,i], data=train)
+  #fetch the r-square and adjusted values
+  rsq <- summary(model_i)$r.squared
+  arsq <- summary(model_i)$adj.r.squared
+  
+  #add the r square values to lists
+  rsq.list <- c(rsq.list, rsq)
+  arsq.list <- c(arsq.list, format(arsq, scientific=FALSE))
+  
+  #build list of variables based on r square threshold
+  if(arsq > threshold){
+    var.list <- c(var.list, names(train[i]))
+  }
+}
+
+
+model_i <- lm(SalePrice ~ train[i], data=train)
+train[i]
+summary(model_i)
+```
+
+
+```{r}
+#build new df and clean data again
+full.df <- train[var.list]
+full.df['SalePrice'] <- train['SalePrice']
+full.df <- na.omit(full.df)
+
+#systematic droplevels
+full.df$Neighborhood <- droplevels(full.df$Neighborhood)
+full.df$OverallQual <- droplevels(full.df$OverallQual)
+full.df$ExterQual <- droplevels(full.df$ExterQual)
+full.df$BsmtQual <- droplevels(full.df$BsmtQual)
+full.df$KitchenQual <- droplevels(full.df$KitchenQual)
+
+
+p1 <- full.df %>%
+  dplyr::select( OverallQual, ExterQual, BsmtQual, TotalBsmtSF, X1stFlrSF, GrLivArea, FullBath, KitchenQual, GarageCars, GarageArea, SalePrice) %>%
+  ggpairs() +
+  #labels
+  labs(title = "Multi-Variable Plot Matrix",
+       subtitle = "Crossplot for Outlier Spotting and Data Screening",
+       caption = "Source: train.csv from https://www.kaggle.com/c/house-prices-advanced-regression-techniques \nAuthor: Jules Stacy")
+
+#debug~~
+```
+
+
+```{r}
+#Time to perform a mass regression model
+#and choose the variables for the final model
+
+full.model <- lm(SalePrice ~., data=full.df)
+step.model <- stepAIC(full.model, direction="both", trace=FALSE)
+summary(step.model)
+
+p2 <- full.df %>%
+  dplyr::select(OverallQual, BsmtQual, X1stFlrSF, GrLivArea, KitchenQual, GarageCars, SalePrice) %>%
+  ggpairs() +
+  #labels
+  labs(title = "Multi-Variable Plot Matrix",
+       subtitle = "Crossplot of Stepwise-Selected Variables",
+       caption = "Source: train.csv from https://www.kaggle.com/c/house-prices-advanced-regression-techniques \nAuthor: Jules Stacy")
+
+
+?stepAIC
+```
+
+
+```{r}
+test = read.csv("./Data/test.csv")
+
+#turn categorical variables into factors
+test$MSSubClass <- factor(test$MSSubClass)
+test$MSZoning <- factor(test$MSZoning)
+test$Street <- factor(test$Street)
+test$Alley <- factor(test$Alley)
+test$LotShape <- factor(test$LotShape)
+test$LandContour <- factor(test$LandContour)
+test$Utilities <- factor(test$Utilities)
+test$LotConfig <- factor(test$LotConfig)
+test$LandSlope <- factor(test$LandSlope)
+test$Neighborhood <- factor(test$Neighborhood)
+test$Condition1 <- factor(test$Condition1)
+test$Condition2 <- factor(test$Condition2)
+test$BldgType <- factor(test$BldgType)
+test$HouseStyle <- factor(test$HouseStyle)
+test$OverallQual <- factor(test$OverallQual)
+test$OverallCond <- factor(test$OverallCond)
+test$RoofStyle <- factor(test$RoofStyle)
+test$RoofMatl <- factor(test$RoofMatl)
+test$Exterior1st <- factor(test$Exterior1st)
+test$Exterior2nd <- factor(test$Exterior2nd)
+test$MasVnrType <- factor(test$MasVnrType)
+test$ExterQual <- factor(test$ExterQual)
+test$ExterCond <- factor(test$ExterCond)
+test$Foundation <- factor(test$Foundation)
+test$BsmtQual <- factor(test$BsmtQual)
+test$BsmtCond <- factor(test$BsmtCond)
+test$BsmtExposure <- factor(test$BsmtExposure)
+test$BsmtFinType1 <- factor(test$BsmtFinType1)
+test$BsmtFinType2 <- factor(test$BsmtFinType2)
+test$Heating <- factor(test$Heating)
+test$HeatingQC <- factor(test$HeatingQC)
+test$CentralAir <- factor(test$CentralAir)
+test$Electrical <- factor(test$Electrical)
+test$KitchenQual <- factor(test$KitchenQual)
+test$Functional <- factor(test$Functional)
+test$FireplaceQu <- factor(test$FireplaceQu)
+test$GarageType <- factor(test$GarageType)
+test$GarageFinish <- factor(test$GarageFinish)
+test$GarageQual <- factor(test$GarageQual)
+test$GarageCond <- factor(test$GarageCond)
+test$PavedDrive <- factor(test$PavedDrive)
+test$PoolQC <- factor(test$PoolQC)
+test$Fence <- factor(test$Fence)
+test$MiscFeature <- factor(test$MiscFeature)
+test$SaleType <- factor(test$SaleType)
+test$SaleCondition <- factor(test$SaleCondition)
+
+#drop unused levels
+test$MSSubClass <- droplevels(test$MSSubClass)
+test$MSZoning <- droplevels(test$MSZoning)
+test$Street <- droplevels(test$Street)
+test$Alley <- droplevels(test$Alley)
+test$LotShape <- droplevels(test$LotShape)
+test$LandContour <- droplevels(test$LandContour)
+test$Utilities <- droplevels(test$Utilities)
+test$LotConfig <- droplevels(test$LotConfig)
+test$LandSlope <- droplevels(test$LandSlope)
+test$Neighborhood <- droplevels(test$Neighborhood)
+test$Condition1 <- droplevels(test$Condition1)
+test$Condition2 <- droplevels(test$Condition2)
+test$BldgType <- droplevels(test$BldgType)
+test$HouseStyle <- droplevels(test$HouseStyle)
+test$OverallQual <- droplevels(test$OverallQual)
+test$OverallCond <- droplevels(test$OverallCond)
+test$RoofStyle <- droplevels(test$RoofStyle)
+test$RoofMatl <- droplevels(test$RoofMatl)
+test$Exterior1st <- droplevels(test$Exterior1st)
+test$Exterior2nd <- droplevels(test$Exterior2nd)
+test$MasVnrType <- droplevels(test$MasVnrType)
+test$ExterQual <- droplevels(test$ExterQual)
+test$ExterCond <- droplevels(test$ExterCond)
+test$Foundation <- droplevels(test$Foundation)
+test$BsmtQual <- droplevels(test$BsmtQual)
+test$BsmtCond <- droplevels(test$BsmtCond)
+test$BsmtExposure <- droplevels(test$BsmtExposure)
+test$BsmtFinType1 <- droplevels(test$BsmtFinType1)
+test$BsmtFinType2 <- droplevels(test$BsmtFinType2)
+test$Heating <- droplevels(test$Heating)
+test$HeatingQC <- droplevels(test$HeatingQC)
+test$CentralAir <- droplevels(test$CentralAir)
+test$Electrical <- droplevels(test$Electrical)
+test$KitchenQual <- droplevels(test$KitchenQual)
+test$Functional <- droplevels(test$Functional)
+test$FireplaceQu <- droplevels(test$FireplaceQu)
+test$GarageType <- droplevels(test$GarageType)
+test$GarageFinish <- droplevels(test$GarageFinish)
+test$GarageQual <- droplevels(test$GarageQual)
+test$GarageCond <- droplevels(test$GarageCond)
+test$PavedDrive <- droplevels(test$PavedDrive)
+test$PoolQC <- droplevels(test$PoolQC)
+test$Fence <- droplevels(test$Fence)
+test$MiscFeature <- droplevels(test$MiscFeature)
+test$SaleType <- droplevels(test$SaleType)
+test$SaleCondition <- droplevels(test$SaleCondition)
+
+step.list <- c("Id", "Neighborhood", "OverallQual", "BsmtQual", 
+    "X1stFlrSF", "GrLivArea", "KitchenQual", "GarageCars")
+test.df <- test[step.list]
+
+test.df$Neighborhood <- droplevels(test.df$Neighborhood)
+test.df$OverallQual <- droplevels(test.df$OverallQual)
+test.df$BsmtQual <- droplevels(test.df$BsmtQual)
+test.df$KitchenQual <- droplevels(test.df$KitchenQual)
+
+test.df$SalePrice <- predict(step.model, newdata=test.df)
+
+final.sales <- data.frame(test.df$Id, test.df$SalePrice)
+write.csv(final.sales, "./Data/predict.csv")
+
+
+#dbeug~~
+var.list
+test.df
+final.sales
+```
+
+
