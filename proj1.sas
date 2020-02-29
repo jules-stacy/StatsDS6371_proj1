@@ -122,24 +122,80 @@ run;
 
 
 /*prediction data import*/
-%web_drop_table(WORK.combo);
+%web_drop_table(WORK.train);
 
 
-FILENAME REFFILE '/folders/myshortcuts/StatsSAScode/Project/combo_clean.csv';
+FILENAME REFFILE '/folders/myshortcuts/StatsSAScode/Project/train.csv';
 
 PROC IMPORT DATAFILE=REFFILE
 	DBMS=CSV
-	OUT=WORK.combo;
+	OUT=WORK.train;
 	GETNAMES=YES;
 RUN;
 
-PROC CONTENTS DATA=WORK.combo; RUN;
+PROC CONTENTS DATA=WORK.train; RUN;
 
 
-%web_open_table(WORK.combo);
+%web_open_table(WORK.train);
+
+
+%web_drop_table(WORK.test);
+
+
+FILENAME REFFILE '/folders/myshortcuts/StatsSAScode/Project/test.csv';
+
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=CSV
+	OUT=WORK.test;
+	GETNAMES=YES;
+RUN;
+
+PROC CONTENTS DATA=WORK.test; RUN;
+
+
+%web_open_table(WORK.test);
+
+data combo;
+   set train test;
+run;
+
 
 data combo;
 set combo;
+if MSZoning = "NA" then MSZoning = "NZ";
+if LotFrontage = "NA" then LotFrontage = 0;
+if Alley = "NA" then Alley = "NL";
+if Utilities = "NA" then Utilities = "NU";
+if Exterior1st = "NA" then Exterior1st = "Other";
+if Exterior2nd = "NA" then Exterior2nd = "Other";
+if MasVnrType = "NA" then MasVnrType = "None";
+if MasVnrArea = "NA" then MasVnrArea = 0;
+if BsmtQual = "NA" then BsmtQual = "NB";
+if BsmtCond = "NA" then BsmtCond = "NB";
+if BsmtExposure = "NA" then BsmtExposure = "NB";
+if BsmtFinType1 = "NA" then BsmtFinType1 = "NB";
+if BsmtFinType2 = "NA" then BsmtFinType2 = "NB";
+if BsmtFinSF1 = "NA" then BsmtFinSF1 = 0;
+if BsmtFinSF2 = "NA" then BsmtFinSF2 = 0;
+if BsmtUnfSF = "NA" then BsmtUnfSF = 0;
+if TotalBsmtSF = "NA" then TotalBsmtSF = 0;
+if BsmtFullBath = "NA" then BsmtFullBath = 0;
+if BsmtHalfBath = "NA" then BsmtHalfBath = 0;
+if KitchenQual = "NA" then KitchenQual = "NK";
+if Functional = "NA" then Functional = "NH";
+if Electrical = "NA" then Electrical = "NE";
+if FireplaceQu = "NA" then FireplaceQu = "NF";
+if GarageType = "NA" then GarageType = "NG";
+if GarageYrBlt = "NA" then GarageYrBlt = 0;
+if GarageFinish = "NA" then GarageFinish = "NG";
+if GarageCars = "NA" then GarageCars = 0;
+if GarageArea = "NA" then GarageArea = 0;
+if GarageQual = "NA" then GarageQual = "NG";
+if GarageCond = "NA" then GarageCond = "NG";
+if PoolQC = "NA" then PoolQC = "NP";
+if Fence = "NA" then Fence = "NF";
+if MiscFeature = "NA" then MiscFeature = "NM";
+if SaleType = "NA" then SaleType = "Other";
 if (id = 524 or id = 1299) then delete;
 run;
 
@@ -149,8 +205,8 @@ run;
 
 
 
-/* My Predictions ~~~~*/
-
+/* Computer Selection~~~~*/
+/*forward selection*/
 proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
 class SaleCondition SaleType MiscFeature Fence PoolQC PavedDrive GarageCond GarageQual GarageFinish GarageType FireplaceQu Functional KitchenQual Electrical CentralAir HeatingQC Heating BsmtFinType2 BsmtFinType1 BsmtExposure BsmtCond BsmtQual Foundation ExterCond ExterQual MasVnrType Exterior2nd Exterior1st MSZoning Street Alley LotShape LandContour Utilities LotConfig LandSlope Neighborhood Condition1 Condition2 BldgType HouseStyle RoofStyle RoofMatl ;
 model SalePrice = MSSubClass	MSZoning	LotFrontage	LotArea	Street	Alley	LotShape	LandContour	Utilities	LotConfig	LandSlope	Neighborhood	Condition1	Condition2	BldgType	HouseStyle	OverallQual	OverallCond	YearBuilt	YearRemodAdd	RoofStyle	RoofMatl	Exterior1st	Exterior2nd	MasVnrType	MasVnrArea	ExterQual	ExterCond	Foundation	BsmtQual	BsmtCond	BsmtExposure	BsmtFinType1	BsmtFinSF1	BsmtFinType2	BsmtFinSF2	BsmtUnfSF	TotalBsmtSF	Heating	HeatingQC	CentralAir	Electrical	X1stFlrSF	X2ndFlrSF	LowQualFinSF	GrLivArea	BsmtFullBath	BsmtHalfBath	FullBath	HalfBath	BedroomAbvGr	KitchenAbvGr	KitchenQual	TotRmsAbvGrd	Functional	Fireplaces	FireplaceQu	GarageType	GarageYrBlt	GarageFinish	GarageCars	GarageArea	GarageQual	GarageCond	PavedDrive	WoodDeckSF	OpenPorchSF	EnclosedPorch	X3SsnPorch	ScreenPorch	PoolArea	PoolQC	Fence	MiscFeature	MiscVal	MoSold	YrSold	SaleType	SaleCondition
@@ -173,7 +229,7 @@ dbms=csv
 replace;
 run;
 
-
+/*backward selection*/
 proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
 class SaleCondition SaleType MiscFeature Fence PoolQC PavedDrive GarageCond GarageQual GarageFinish GarageType FireplaceQu Functional KitchenQual Electrical CentralAir HeatingQC Heating BsmtFinType2 BsmtFinType1 BsmtExposure BsmtCond BsmtQual Foundation ExterCond ExterQual MasVnrType Exterior2nd Exterior1st MSZoning Street Alley LotShape LandContour Utilities LotConfig LandSlope Neighborhood Condition1 Condition2 BldgType HouseStyle RoofStyle RoofMatl ;
 model SalePrice = MSSubClass	MSZoning	LotFrontage	LotArea	Street	Alley	LotShape	LandContour	Utilities	LotConfig	LandSlope	Neighborhood	Condition1	Condition2	BldgType	HouseStyle	OverallQual	OverallCond	YearBuilt	YearRemodAdd	RoofStyle	RoofMatl	Exterior1st	Exterior2nd	MasVnrType	MasVnrArea	ExterQual	ExterCond	Foundation	BsmtQual	BsmtCond	BsmtExposure	BsmtFinType1	BsmtFinSF1	BsmtFinType2	BsmtFinSF2	BsmtUnfSF	TotalBsmtSF	Heating	HeatingQC	CentralAir	Electrical	X1stFlrSF	X2ndFlrSF	LowQualFinSF	GrLivArea	BsmtFullBath	BsmtHalfBath	FullBath	HalfBath	BedroomAbvGr	KitchenAbvGr	KitchenQual	TotRmsAbvGrd	Functional	Fireplaces	FireplaceQu	GarageType	GarageYrBlt	GarageFinish	GarageCars	GarageArea	GarageQual	GarageCond	PavedDrive	WoodDeckSF	OpenPorchSF	EnclosedPorch	X3SsnPorch	ScreenPorch	PoolArea	PoolQC	Fence	MiscFeature	MiscVal	MoSold	YrSold	SaleType	SaleCondition
@@ -197,7 +253,7 @@ replace;
 run;
 
 
-
+/*stepwise selection*/
 proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
 class SaleCondition SaleType MiscFeature Fence PoolQC PavedDrive GarageCond GarageQual GarageFinish GarageType FireplaceQu Functional KitchenQual Electrical CentralAir HeatingQC Heating BsmtFinType2 BsmtFinType1 BsmtExposure BsmtCond BsmtQual Foundation ExterCond ExterQual MasVnrType Exterior2nd Exterior1st MSZoning Street Alley LotShape LandContour Utilities LotConfig LandSlope Neighborhood Condition1 Condition2 BldgType HouseStyle RoofStyle RoofMatl ;
 model SalePrice = MSSubClass	MSZoning	LotFrontage	LotArea	Street	Alley	LotShape	LandContour	Utilities	LotConfig	LandSlope	Neighborhood	Condition1	Condition2	BldgType	HouseStyle	OverallQual	OverallCond	YearBuilt	YearRemodAdd	RoofStyle	RoofMatl	Exterior1st	Exterior2nd	MasVnrType	MasVnrArea	ExterQual	ExterCond	Foundation	BsmtQual	BsmtCond	BsmtExposure	BsmtFinType1	BsmtFinSF1	BsmtFinType2	BsmtFinSF2	BsmtUnfSF	TotalBsmtSF	Heating	HeatingQC	CentralAir	Electrical	X1stFlrSF	X2ndFlrSF	LowQualFinSF	GrLivArea	BsmtFullBath	BsmtHalfBath	FullBath	HalfBath	BedroomAbvGr	KitchenAbvGr	KitchenQual	TotRmsAbvGrd	Functional	Fireplaces	FireplaceQu	GarageType	GarageYrBlt	GarageFinish	GarageCars	GarageArea	GarageQual	GarageCond	PavedDrive	WoodDeckSF	OpenPorchSF	EnclosedPorch	X3SsnPorch	ScreenPorch	PoolArea	PoolQC	Fence	MiscFeature	MiscVal	MoSold	YrSold	SaleType	SaleCondition
@@ -221,9 +277,8 @@ replace;
 run;
 
 
-
-/*best code so far: 3056 */
-
+/*custom model, hybrid computer human selection~~~~~*/
+/*best code so far: final model */
 proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
 class Neighborhood OverallQual ExterQual KitchenQual BsmtQual SaleCondition GarageQual;
 model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | OverallQual GrLivArea | OverallQual BsmtQual GarageCars | GarageQual  SaleCondition | OverallQual YearBuilt YearRemodAdd
@@ -231,26 +286,9 @@ model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | 
 output out = results p = predict;
 run;
 
-
-
-
-proc glmselect data = combo plots(stepaxis = number) = (criterionpanel ASEplot);
-class Neighborhood OverallQual ExterQual KitchenQual BsmtQual SaleCondition GarageQual;
-model SalePrice =   GrLivArea | KitchenQual GrLivArea |Neighborhood ExterQual | OverallQual GrLivArea | OverallQual BsmtQual GarageCars | GarageQual  SaleCondition | OverallQual YearBuilt YrSold YearRemodAdd
-/selection = stepwise (select=CV) cvmethod=random(5) stats=adjrsq;
-output out = results p = predict;
-run;
-
-
 proc means data=results;
 var SalePrice;
 run;
-
-
-
-
-
-
 
 
 data results2;
@@ -266,6 +304,18 @@ outfile='/folders/myshortcuts/StatsSAScode/Project/results2.csv'
 dbms=csv
 replace;
 run;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/

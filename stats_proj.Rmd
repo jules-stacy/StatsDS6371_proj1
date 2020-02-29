@@ -24,9 +24,8 @@ invisible(library(GGally))
 
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-#test = read.csv("./Data/test.csv")
-
-#train = read.csv("./Data/train.csv")
+test = read.csv("./test.csv")
+train = read.csv("./train.csv")
 ```
 
 ```{r}
@@ -53,8 +52,8 @@ train$BsmtCond[is.na(train$BsmtCond)]<-"NB"
 train$BsmtCond <- as.factor(train$BsmtCond)
 
 train$BsmtExposure <- as.character(train$BsmtCond)
-train$BsmtCond[is.na(train$BsmtCond)]<-"NB"
-train$BsmtCond <- as.factor(train$BsmtCond)
+train$BsmtExposure[is.na(train$BsmtCond)]<-"NB"
+train$BsmtExposure <- as.factor(train$BsmtCond)
 
 train$BsmtFinType1 <- as.character(train$BsmtFinType1)
 train$BsmtFinType1[is.na(train$BsmtFinType1)]<-"NB"
@@ -436,6 +435,29 @@ train.clean = read.csv("./Data/train_clean.csv")
 
 sum(is.na(test.clean))
 sum(is.na(train.clean))
+```
+
+
+```{r}
+#combo dataset from SAS testing
+combo = read.csv("./combotest.csv")
+
+#Create a list of NA value sums for each column
+list.na <- c()
+vars.na <- c()
+for(i in 1:length(names(combo))){
+  list.na <- c(list.na, sum(is.na(combo[i])))
+  if(sum(is.na(combo[i]))){
+    vars.na <- c(vars.na, names(combo[i]))
+  }
+}
+
+
+#debug ~~
+list.na
+vars.na
+
+
 ```
 
 
